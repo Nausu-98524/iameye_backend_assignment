@@ -22,7 +22,10 @@ const registerControllers = async (req, res) => {
     pinCode,
     imageUrl,
     videoUrl,
+    video_public_id,
+    image_public_id,
   } = req.body;
+  console.log("testttttttttt", adhaarNumber.trim());
 
   if (!fullName || fullName.trim() === "") {
     return res.status(400).send({
@@ -74,6 +77,11 @@ const registerControllers = async (req, res) => {
       success: false,
       message: "Adhaar Number is required",
     });
+  } else if (!/^\d{12}$/.test(adhaarNumber.trim())) {
+    return res.status(400).send({
+      success: false,
+      message: "Aadhaar Number must be exactly 12 digits",
+    });
   } else if (!panNumber || panNumber.trim() === "") {
     return res.status(400).send({
       success: false,
@@ -104,6 +112,11 @@ const registerControllers = async (req, res) => {
       success: false,
       message: "Pincode is required",
     });
+  } else if (!/^\d{6}$/.test(pinCode.trim())) {
+    return res.status(400).send({
+      success: false,
+      message: "Pincode must be exactly 6 digits",
+    });
   } else if (!imageUrl || imageUrl.trim() === "") {
     return res.status(400).send({
       success: false,
@@ -118,16 +131,30 @@ const registerControllers = async (req, res) => {
 
   try {
     const existingUser = await userModel.findOne({
-      emailID: emailID.toLowerCase(),
+      $or: [
+        { emailID: emailID.toLowerCase() },
+        { adhaarNumber },
+        { panNumber },
+      ],
     });
+
     if (existingUser) {
-      return res.status(400).send({
+      let duplicateField = "";
+      if (existingUser.emailID === emailID.toLowerCase()) {
+        duplicateField = "Email ID";
+      } else if (existingUser.adhaarNumber === adhaarNumber) {
+        duplicateField = "Aadhaar Number";
+      } else if (existingUser.panNumber === panNumber) {
+        duplicateField = "PAN Number";
+      }
+
+      return res.status(400).json({
         success: false,
-        message: "User already exists",
+        message: `${duplicateField} already exist`,
       });
     }
 
-    //hash password
+    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -148,6 +175,8 @@ const registerControllers = async (req, res) => {
       password: hashedPassword,
       imageUrl,
       videoUrl,
+      video_public_id,
+      image_public_id,
     };
 
     await userModel.create(newUser);
@@ -157,7 +186,7 @@ const registerControllers = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    res.status(500).send({
+    res.status(500).json({
       success: false,
       message: "Error in Register API",
       error,

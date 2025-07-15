@@ -22,6 +22,7 @@ const userSchema = new mongoose.Schema(
     emailID: {
       type: String,
       required: [true, "Email is required"],
+      unique: true,
     },
     password: {
       type: String,
@@ -30,10 +31,12 @@ const userSchema = new mongoose.Schema(
     adhaarNumber: {
       type: String,
       required: [true, "Adhaar is required"],
+      unique: true,
     },
     panNumber: {
       type: String,
       required: [true, "PAN no is required"],
+      unique: true,
     },
     addressLine1: {
       type: String,
@@ -59,9 +62,15 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, "Video URL is required"],
     },
+    video_public_id: {
+      type: String,
+    },
     imageUrl: {
       type: String,
       required: [true, "Image URL is required"],
+    },
+    image_public_id: {
+      type: String,
     },
     role: {
       required: true,

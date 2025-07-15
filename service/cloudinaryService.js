@@ -21,4 +21,4 @@ const uploadToCloudinary = (fileBuffer, resourceType = "image") => {
   });
 };
 
-module.exports = { uploadToCloudinary };
+module.exports = { uploadToCloudinary, cloudinary };

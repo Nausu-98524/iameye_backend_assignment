@@ -1,7 +1,10 @@
 const userModel = require("../models/user.model");
 const bcrypt = require("bcryptjs");
 const indianStates = require("../service/stateData");
-const { uploadToCloudinary } = require("../service/cloudinaryService");
+const {
+  uploadToCloudinary,
+  cloudinary,
+} = require("../service/cloudinaryService");
 
 const getUserDetailsController = async (req, res) => {
   const { userId } = req.body;
@@ -172,14 +175,26 @@ const deleteUserController = async (req, res) => {
         .json({ success: false, message: "Please provide User Id" });
     }
 
-    const deletedUser = await userModel.findByIdAndDelete(userId);
+    const user = await userModel.findById(userId);
 
-    if (!deletedUser) {
+    if (!user) {
       return res
         .status(404)
         .json({ success: false, message: "User not found" });
     }
+    if (user.image_public_id) {
+      console.log("Deleting image:", user.image_public_id);
+      await cloudinary.uploader.destroy(user.image_public_id, {
+        resource_type: "image",
+      });
+    }
+    if (user.video_public_id) {
+      await cloudinary.uploader.destroy(user.video_public_id, {
+        resource_type: "video",
+      });
+    }
 
+    await userModel.findByIdAndDelete(userId);
     return res
       .status(200)
       .json({ success: true, message: "User deleted successfully." });
@@ -279,6 +294,7 @@ const uploadImage = async (req, res) => {
       success: true,
       message: "image upload successfully",
       imageUrl: result.secure_url,
+      image_public_id: result.public_id,
     });
   } catch (error) {
     console.error("Upload Error:", error);
@@ -305,6 +321,7 @@ const uploadVideo = async (req, res) => {
       success: true,
       message: "Video uploaded successfully",
       videoUrl: result.secure_url,
+      video_public_id: result.public_id,
     });
   } catch (error) {
     console.error("Video Upload Error:", error);
