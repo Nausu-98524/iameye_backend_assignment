@@ -37,7 +37,14 @@ const registerControllers = async (req, res) => {
       success: false,
       message: "Date Of Birth is required",
     });
-  } else if (!gender || gender.trim() === "") {
+  } 
+    else if (new Date(dateOfBirth) >= new Date()) {
+  return res.status(400).send({
+    success: false,
+    message: "Date Of Birth must be less than current date",
+  });
+}
+else if (!gender || gender.trim() === "") {
     return res.status(400).send({
       success: false,
       message: "Gender is required",
